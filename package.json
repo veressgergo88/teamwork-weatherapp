@@ -1,0 +1,15 @@
+{
+  "name": "teamwork12-14weeks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tailwindcss": "^3.3.2",
+    "typescript": "^5.1.3"
+  }
+}
