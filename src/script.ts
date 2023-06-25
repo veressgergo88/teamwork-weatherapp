@@ -1,7 +1,7 @@
-import { API_KEY } from './config';
+/* import { API_KEY } from './config';
 
 const url = `http://api.weatherapi.com/v1?apiKey=${API_KEY}`;
-
+ */
 const dataArray: string[] = [
     'Budapest',
     'Miskolc',
@@ -72,3 +72,20 @@ const dataArray: string[] = [
 
   let picture = document.getElementById('pictureOfWeather')
   const svgElement = (picture as HTMLElement).append('')
+
+  let resultParagraphElement = document.getElementById("result-paragraph")!
+
+  let render = (content: string) => {
+    resultParagraphElement.innerHTML = content
+  }
+
+  const load = async () => {
+    let response = await fetch("http://api.weatherapi.com/v1/response.json?key=3bf837af50db4fa3855164954232506&q=bulk")
+    let data = await response.json()
+  
+    
+    render(data["info"]["pages"])
+  }
+
+  let loadButtonElement = document.getElementById("load")!
+  loadButtonElement.addEventListener("click", load)
