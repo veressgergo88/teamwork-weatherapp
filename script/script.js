@@ -64,7 +64,7 @@ const renderSuggestions = () => {
 };
 inputBox.addEventListener('input', getInput);
 let celsius = document.getElementById('celsius');
-const pElement1 = celsius.append('19');
+const pElement1 = celsius.append('19°');
 let city = document.getElementById('city');
 const pElement3 = city.append('New York');
 let statusOfWeather = document.getElementById('statusOfWeather');

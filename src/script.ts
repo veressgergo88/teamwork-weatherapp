@@ -62,7 +62,7 @@ const dataArray: string[] = [
 
 
   let celsius = document.getElementById('celsius')
-  const pElement1 = (celsius as HTMLElement).append('19')
+  const pElement1 = (celsius as HTMLElement).append('19°')
 
   let city = document.getElementById('city')
   const pElement3 = (city as HTMLElement).append('New York')
