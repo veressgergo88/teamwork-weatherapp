@@ -1,4 +1,8 @@
 "use strict";
+/* import { API_KEY } from './config';
+
+const url = `http://api.weatherapi.com/v1?apiKey=${API_KEY}`;
+ */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,10 +12,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-/* import { API_KEY } from './config';
-
-const url = `http://api.weatherapi.com/v1?apiKey=${API_KEY}`;
- */
+let load = () => __awaiter(void 0, void 0, void 0, function* () {
+    let response = yield fetch("http://api.weatherapi.com/v1/forecast.json?key=04e4c702cf3b4efc921170534232706&q=New York&days=3&aqi=no&alerts=no");
+    let data = yield response.json();
+    return data;
+});
+load();
+let load2 = () => __awaiter(void 0, void 0, void 0, function* () {
+    let response = yield fetch("http://api.weatherapi.com/v1/forecast.json");
+    let data = yield response.json();
+    return data;
+});
+load2();
+let load3 = () => __awaiter(void 0, void 0, void 0, function* () {
+    let response = yield fetch("http://api.weatherapi.com/v1/history.json");
+    let data = yield response.json();
+    return data;
+});
+load3();
 const dataArray = [
     'Budapest',
     'Miskolc',
@@ -35,7 +53,7 @@ const dataArray = [
     'Szombathely'
 ];
 let userInput;
-const inputBox = document.querySelector('.inp'); //querySelector megfogja az összes .className-en futó elementet
+const inputBox = document.querySelector('.inp');
 const suggestion = document.querySelector('.suggestionBox');
 let filteredArray = [];
 const getInput = (event) => {
@@ -72,13 +90,18 @@ const pElement2 = statusOfWeather.append('Sunny');
 let picture = document.getElementById('pictureOfWeather');
 const svgElement = picture.append('');
 let resultParagraphElement = document.getElementById("result-paragraph");
-let render = (content) => {
-    resultParagraphElement.innerHTML = content;
-};
-const load = () => __awaiter(void 0, void 0, void 0, function* () {
-    let response = yield fetch("http://api.weatherapi.com/v1/response.json?key=3bf837af50db4fa3855164954232506&q=bulk");
-    let data = yield response.json();
-    render(data["info"]["pages"]);
-});
-let loadButtonElement = document.getElementById("load");
-loadButtonElement.addEventListener("click", load);
+/*   function clock(){
+
+    let today = new Date();
+    let date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+    let ora = String(today.getHours()).padStart(2, '0');
+    let perc = String(today.getMinutes()).padStart(2, '0');
+    let masodperc = String(today.getSeconds()).padStart(2, '0');
+    let dateTime = ora + ":" + perc  + ":" + masodperc;
+    
+        document.getElementById("ido")!.innerHTML = "A pontos idő: " + date + " " +  dateTime
+    
+    let t = setTimeout(function(){ clock() }, 1000);
+    }
+    clock();
+ */
