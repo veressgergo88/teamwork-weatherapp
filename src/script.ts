@@ -18,7 +18,7 @@ function displayWeatherData(data: any): void {
   const maxMinElement: HTMLElement = document.getElementById('max-min')!;
   const windElement: HTMLElement = document.getElementById('wind')!;
   const chanceElement: HTMLElement = document.getElementById('chance')!;
-  const pictureElement: HTMLElement = document.getElementById('pictureOfWeather')!;
+  const pictureElement: HTMLImageElement = document.getElementById('pictureOfWeather') as HTMLImageElement;
 
   cityElement.textContent = data.name;
   weatherStatusElement.textContent = data.weather[0].main;
@@ -29,88 +29,88 @@ function displayWeatherData(data: any): void {
   windElement.textContent = `Wind Speed: ${data.wind.speed} m/s`;
   chanceElement.textContent = `Chance of Rain: ${data.rain ? data.rain['1h'] : 0}%`;
 
-  // SVG kép vagy ikon beállítása az időjárás alapján
-  const weatherIconName: string = getWeatherIconName(data.weather[0].main);
-  pictureElement.innerHTML = `<svg class="h-32 w-32" viewBox="0 -32 512 512" xmlns="http://www.w3.org/2000/svg"><use xlink:href="/path/to/icons.svg#${weatherIconName}"></use></svg>`;
+  const weatherIconName: string = getWeatherIconName(data.weather[0].icon);
+  pictureElement.src = weatherIconName;
+  pictureElement.alt = 'Weather Icon';
 }
 
-// Az időjárási állapot alapján visszaadja a megfelelő ikon nevét
-function getWeatherIconName(weatherStatus: string): string {
-  // Az időjárási állapotokhoz tartozó ikonok és nevek
-  const weatherIcons: { [key: string]: string } = {
-    Clear: 'icon-clear',
-    Clouds: 'icon-clouds',
-    Rain: 'icon-rain',
-    // ... további időjárási állapotok és ikonok
-  };
+// Az időjárási ikonok elérési útvonalai
+const weatherIcons: { [key: string]: string } = {
+  '01d': '/img/clearsky.png',
+  '01n': '/img/clearsky.png',
+  '02d': '/img/clouds.png',
+  '02n': '/img/clouds.png',
+  '03d': '/img/clouds.png',
+  '03n': '/img/clouds.png',
+  '04d': '/img/clouds.png',
+  '04n': '/img/clouds.png',
+  '09d': '/img/rain.png',
+  '09n': '/img/rain.png',
+  '10d': '/img/rain.png',
+  '10n': '/img/rain.png',
+  '11d': '/img/thunderstorm.png',
+  '11n': '/img/thunderstorm.png',
+  '13d': '/img/snow.png',
+  '13n': '/img/snow.png',
+  '50d': '/img/mist.png',
+  '50n': '/img/mist.png',
+};
 
-  return weatherIcons[weatherStatus] || 'icon-default'; // Alapértelmezett ikon, ha nincs meghatározott ikon az adott állapothoz
+// Az időjárási állapot alapján az ikon elérési útvonalának megszerzése
+function getWeatherIconName(iconCode: string): string {
+  return weatherIcons[iconCode] || '';
 }
 
-// Autocomplete funkció
-async function autocomplete(input: HTMLInputElement): Promise<void> {
-  const suggestionsList: HTMLDivElement = document.getElementById('suggestions-list') as HTMLDivElement;
+// Időjárás lekérdezése
+async function getWeather(city: string): Promise<void> {
+  const weatherResponse = await fetch(`${WEATHER_URL}?q=${city}&units=metric&appid=${API_KEY}`);
+  const weatherData = await weatherResponse.json();
+  displayWeatherData(weatherData);
+}
 
-  input.addEventListener('input', async () => {
-    const inputValue: string = input.value;
+// Autocomplete lekérdezése
+async function getAutocomplete(query: string): Promise<void> {
+  const autocompleteResponse = await fetch(`${AUTOCOMPLETE_URL}?q=${query}&limit=5&appid=${API_KEY}`);
+  const autocompleteData = await autocompleteResponse.json();
+  displayAutocomplete(autocompleteData);
+}
 
-    if (inputValue.length >= 3) {
-      try {
-        const response: Response = await fetch(
-          `${AUTOCOMPLETE_URL}?q=${inputValue}&limit=5&appid=${API_KEY}`
-        );
+// Autocomplete lista megjelenítése
+function displayAutocomplete(data: any[]): void {
+  const suggestionsList: HTMLElement = document.getElementById('suggestions-list')!;
+  suggestionsList.innerHTML = '';
 
-        if (response.ok) {
-          const data: any[] = await response.json();
-          const suggestions: string[] = data.map((city: any) => city.name);
-
-          // Töröljük a korábbi sugestiókat
-          suggestionsList.innerHTML = '';
-
-          // Sugestiók hozzáadása a listához
-          suggestions.forEach((suggestion: string) => {
-            const suggestionItem: HTMLDivElement = document.createElement('div');
-            suggestionItem.textContent = suggestion;
-            suggestionItem.classList.add('px-4', 'py-2', 'hover:bg-gray-100', 'cursor-pointer');
-            suggestionItem.addEventListener('click', () => {
-              input.value = suggestion;
-              suggestionsList.innerHTML = '';
-            });
-            suggestionsList.appendChild(suggestionItem);
-          });
-        } else {
-          console.error('Hiba a városnév lekérdezésekor.');
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    } else {
-      // Töröljük a sugestiókat, ha a beviteli érték kevesebb, mint 3 karakter
+  data.forEach((item: any) => {
+    const suggestionItem: HTMLDivElement = document.createElement('div');
+    suggestionItem.textContent = item.name;
+    suggestionItem.classList.add('suggestion-item');
+    suggestionItem.addEventListener('click', () => {
+      cityInput.value = item.name;
       suggestionsList.innerHTML = '';
-    }
+    });
+    suggestionsList.appendChild(suggestionItem);
   });
 }
 
-
-// Gomb lenyomás eseménykezelő
-searchButton.addEventListener('click', async () => {
+// Keresés eseménykezelő
+searchButton.addEventListener('click', () => {
   const city: string = cityInput.value;
+  getWeather(city);
+});
 
-  try {
-    const response: Response = await fetch(
-      `${WEATHER_URL}?q=${city}&appid=${API_KEY}&units=metric`
-    );
-
-    if (response.ok) {
-      const data: any = await response.json();
-      displayWeatherData(data);
-    } else {
-      console.error('Hiba az időjárás lekérdezésekor.');
-    }
-  } catch (error) {
-    console.error(error);
+// Input mező változás eseménykezelő
+cityInput.addEventListener('input', () => {
+  const query: string = cityInput.value;
+  if (query.length > 2) {
+    getAutocomplete(query);
+  } else {
+    const suggestionsList: HTMLElement = document.getElementById('suggestions-list')!;
+    suggestionsList.innerHTML = '';
   }
 });
 
-// Autocomplete inicializálása
-autocomplete(cityInput);
+// Gomb lenyomásának eseménykezelő
+searchButton.addEventListener('click', () => {
+  const pictureElement: HTMLImageElement = document.getElementById('pictureOfWeather') as HTMLImageElement;
+  pictureElement.style.display = 'inline';
+});
