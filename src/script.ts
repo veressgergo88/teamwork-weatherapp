@@ -1,180 +1,116 @@
-const apiKey = 'a3e3462b47bbc9a7e2cb32ec5dff6423';
+const API_KEY: string = '03fcf8b5ca40258e0d3fd862688c8848';
+const AUTOCOMPLETE_URL: string = 'https://api.openweathermap.org/geo/1.0/direct';
+const WEATHER_URL: string = 'https://api.openweathermap.org/data/2.5/weather';
 
-interface WeatherData {
-  coord: {
-    lon: number;
-    lat: number;
-  };
-  weather: [
-    {
-      id: number;
-      main: string;
-      description: string;
-      icon: string;
-    }
-  ];
-  base: string;
-  main: {
-    temp: number;
-    feels_like: number;
-    temp_min: number;
-    temp_max: number;
-    pressure: number;
-    humidity: number;
-    sea_level: number;
-    grnd_level: number;
-  };
-  visibility: number;
-  wind: {
-    speed: number;
-    deg: number;
-    gust: number;
-  };
-  clouds: {
-    all: number;
-  };
-  rain?: {
-    "1h": number;
-    "3h": number;
-  };
-  dt: number;
-  sys: {
-    type: number;
-    id: number;
-    country: string;
-    sunrise: number;
-    sunset: number;
-  };
-  timezone: number;
-  id: number;
-  name: string;
-  cod: number;
-  uv_index: number;
+// Input mező referencia
+const cityInput: HTMLInputElement = document.getElementById('city-input') as HTMLInputElement;
+
+// Gomb referencia
+const searchButton: HTMLButtonElement = document.getElementById('show-me-button') as HTMLButtonElement;
+
+// Időjárás adatok megjelenítése
+function displayWeatherData(data: any): void {
+  const cityElement: HTMLElement = document.getElementById('city')!;
+  const weatherStatusElement: HTMLElement = document.getElementById('statusOfWeather')!;
+  const temperatureElement: HTMLElement = document.getElementById('celsius')!;
+  const realFeelElement: HTMLElement = document.getElementById('real-feel')!;
+  const humidityElement: HTMLElement = document.getElementById('humidity')!;
+  const maxMinElement: HTMLElement = document.getElementById('max-min')!;
+  const windElement: HTMLElement = document.getElementById('wind')!;
+  const chanceElement: HTMLElement = document.getElementById('chance')!;
+  const pictureElement: HTMLElement = document.getElementById('pictureOfWeather')!;
+
+  cityElement.textContent = data.name;
+  weatherStatusElement.textContent = data.weather[0].main;
+  temperatureElement.textContent = `${Math.round(data.main.temp)}°C`;
+  realFeelElement.textContent = `Real Feel: ${Math.round(data.main.feels_like)}°C`;
+  humidityElement.textContent = `Humidity: ${data.main.humidity}%`;
+  maxMinElement.textContent = `Max/Min Temp: ${Math.round(data.main.temp_max)}°C / ${Math.round(data.main.temp_min)}°C`;
+  windElement.textContent = `Wind Speed: ${data.wind.speed} m/s`;
+  chanceElement.textContent = `Chance of Rain: ${data.rain ? data.rain['1h'] : 0}%`;
+
+  // SVG kép vagy ikon beállítása az időjárás alapján
+  const weatherIconName: string = getWeatherIconName(data.weather[0].main);
+  pictureElement.innerHTML = `<svg class="h-32 w-32" viewBox="0 -32 512 512" xmlns="http://www.w3.org/2000/svg"><use xlink:href="/path/to/icons.svg#${weatherIconName}"></use></svg>`;
 }
 
-const loadWeatherData = async (city: string): Promise<WeatherData> => {
-  const response = await fetch(
-    `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`
-  );
-  const data: WeatherData = await response.json();
-  allCitiesArray.push(data.name);
-  return data;
-};
+// Az időjárási állapot alapján visszaadja a megfelelő ikon nevét
+function getWeatherIconName(weatherStatus: string): string {
+  // Az időjárási állapotokhoz tartozó ikonok és nevek
+  const weatherIcons: { [key: string]: string } = {
+    Clear: 'icon-clear',
+    Clouds: 'icon-clouds',
+    Rain: 'icon-rain',
+    // ... további időjárási állapotok és ikonok
+  };
 
-let city: string = '';
+  return weatherIcons[weatherStatus] || 'icon-default'; // Alapértelmezett ikon, ha nincs meghatározott ikon az adott állapothoz
+}
 
-let allCitiesArray: string[] = [];
+// Autocomplete funkció
+async function autocomplete(input: HTMLInputElement): Promise<void> {
+  const suggestionsList: HTMLDivElement = document.getElementById('suggestions-list') as HTMLDivElement;
 
-let userInput: string;
-const inputBox = document.getElementById('input-box')!;
-const suggestion = document.getElementById('suggestion-box')!;
-let filteredArray: string[] = [];
+  input.addEventListener('input', async () => {
+    const inputValue: string = input.value;
 
-const displayErrorMessage = (error: unknown) => {
-  const resultParagraphElement = document.getElementById('result-paragraph');
-  if (resultParagraphElement) {
-    resultParagraphElement.textContent = `Hiba történt: ${(error as Error).message}`;
-  }
-};
+    if (inputValue.length >= 3) {
+      try {
+        const response: Response = await fetch(
+          `${AUTOCOMPLETE_URL}?q=${inputValue}&limit=5&appid=${API_KEY}`
+        );
 
-const updateWeatherData = async (city: string) => {
+        if (response.ok) {
+          const data: any[] = await response.json();
+          const suggestions: string[] = data.map((city: any) => city.name);
+
+          // Töröljük a korábbi sugestiókat
+          suggestionsList.innerHTML = '';
+
+          // Sugestiók hozzáadása a listához
+          suggestions.forEach((suggestion: string) => {
+            const suggestionItem: HTMLDivElement = document.createElement('div');
+            suggestionItem.textContent = suggestion;
+            suggestionItem.classList.add('px-4', 'py-2', 'hover:bg-gray-100', 'cursor-pointer');
+            suggestionItem.addEventListener('click', () => {
+              input.value = suggestion;
+              suggestionsList.innerHTML = '';
+            });
+            suggestionsList.appendChild(suggestionItem);
+          });
+        } else {
+          console.error('Hiba a városnév lekérdezésekor.');
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    } else {
+      // Töröljük a sugestiókat, ha a beviteli érték kevesebb, mint 3 karakter
+      suggestionsList.innerHTML = '';
+    }
+  });
+}
+
+
+// Gomb lenyomás eseménykezelő
+searchButton.addEventListener('click', async () => {
+  const city: string = cityInput.value;
+
   try {
-    const data = await loadWeatherData(city);
-    displayWeatherData(data);
+    const response: Response = await fetch(
+      `${WEATHER_URL}?q=${city}&appid=${API_KEY}&units=metric`
+    );
+
+    if (response.ok) {
+      const data: any = await response.json();
+      displayWeatherData(data);
+    } else {
+      console.error('Hiba az időjárás lekérdezésekor.');
+    }
   } catch (error) {
-    displayErrorMessage((error as Error).message);
+    console.error(error);
   }
-};
+});
 
-const getInput = (event: Event) => {
-  userInput = (event.target as HTMLInputElement).value;
-  if (userInput === '') {
-    filteredArray = [];
-    renderSuggestions();
-  } else {
-    filterArray();
-    renderSuggestions();
-  }
-
-  if (event instanceof KeyboardEvent && event.key === 'Enter') {
-    selectCity(event);
-  }
-};
-
-const updateWeatherDataForCities = async (cities: string[]) => {
-  for (const city of cities) {
-    await updateWeatherData(city);
-  }
-};
-
-const cities = ['New York', 'Budapest', 'Prága', 'Pozsony', 'Párizs', 'London'];
-
-const selectCity = (event: Event) => {
-  const selectedCity = (event.target as HTMLDivElement).textContent;
-  if (selectedCity) {
-    userInput = selectedCity;
-    inputBox.querySelector('input')!.value = userInput;
-    updateWeatherData(userInput);
-  }
-};
-
-const showMeButton = document.getElementById('show-me-button')!;
-showMeButton.addEventListener('click', selectCity);
-
-inputBox.querySelector('input')!.addEventListener('input', getInput);
-suggestion.addEventListener('click', selectCity);
-suggestion.addEventListener('mousedown', selectCity);
-const filterArray = () => {
-  filteredArray = allCitiesArray.filter((item) =>
-    item.toLowerCase().includes(userInput.toLowerCase())
-  );
-};
-
-const renderSuggestions = () => {
-  suggestion.innerHTML = '';
-  if (filteredArray.length > 0) {
-    filteredArray.forEach((item) => {
-      const divElement = document.createElement('div');
-      divElement.textContent = item;
-      suggestion.appendChild(divElement);
-    });
-  }
-};
-
-const displayWeatherData = (data: WeatherData) => {
-  const celsius = document.getElementById('celsius') as HTMLElement;
-  const celsiusValue = (data.main.temp - 273.15).toFixed(2);
-  celsius.textContent = `${celsiusValue}°C`;
-
-  const cityx = document.getElementById('city') as HTMLElement;
-  cityx.textContent = data.name;
-
-  const statusOfWeather = document.getElementById('statusOfWeather') as HTMLElement;
-  statusOfWeather.textContent = data.weather[0].description;
-
-  const picture = document.getElementById('pictureOfWeather') as HTMLElement;
-  picture.innerHTML = `<svg ...></svg>`;
-
-  const realFeel = document.getElementById('real-feel') as HTMLElement;
-  const realFeelCelsius = (data.main.feels_like - 273.15).toFixed(2);
-  realFeel.textContent = `Real Feel: ${realFeelCelsius}°C`;
-
-  const humidity = document.getElementById('humidity') as HTMLElement;
-  humidity.textContent = `Humidity: ${data.main.humidity}%`;
-
-  const maxMin = document.getElementById('max-min') as HTMLElement;
-  const maxCelsius = (data.main.temp_max - 273.15).toFixed(2);
-  const minCelsius = (data.main.temp_min - 273.15).toFixed(2)
-  maxMin.textContent = `Max/Min: ${maxCelsius}°C / ${minCelsius}°C`;
-
-  const uvIndex = document.getElementById('uv-index') as HTMLElement;
-  uvIndex.textContent = `UV-Index: ${data.uv_index}`;
-
-  const wind = document.getElementById('wind') as HTMLElement;
-  wind.textContent = `Wind: ${data.wind.speed} km/h`;
-
-  const chance = document.getElementById('chance') as HTMLElement;
-  chance.textContent = `Rain chance: ${data.rain ? data.rain["1h"] : 0}%`;
-};
-
-updateWeatherDataForCities(cities);
+// Autocomplete inicializálása
+autocomplete(cityInput);
