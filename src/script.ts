@@ -111,6 +111,20 @@ cityInput.addEventListener('input', () => {
 
 // Gomb lenyomásának eseménykezelő
 searchButton.addEventListener('click', () => {
+  const animateBox: HTMLElement = document.getElementById('animate-box')!;
+  animateBox.classList.add('animate-slide-up');
+  
   const pictureElement: HTMLImageElement = document.getElementById('pictureOfWeather') as HTMLImageElement;
   pictureElement.style.display = 'inline';
+
+  // Gomb lenyomása után eltávolítjuk az eseménykezelőt, hogy a gomb ne mozogjon újra
+  searchButton.removeEventListener('click', buttonClickHandler);
 });
+
+function buttonClickHandler() {
+  const pictureElement: HTMLImageElement = document.getElementById('pictureOfWeather') as HTMLImageElement;
+  pictureElement.style.display = 'inline';
+}
+
+// Gomb lenyomásának eseménykezelő hozzáadása
+searchButton.addEventListener('click', buttonClickHandler);
