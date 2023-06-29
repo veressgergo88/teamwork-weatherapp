@@ -16,15 +16,15 @@
   top: 1em;
 }
 */
-  .animate-box {
-    position: relative;
-    top: 18em;
-    transition: top 0.5s ease-in-out;
-  }
+.animate-box {
+  position: relative;
+  top: 15em;
+  transition: top 0.5s ease-in-out;
+}
 
-  .animate-slide-up {
-    top: 1em;
-  }
+.animate-slide-up {
+  top: 1em;
+}
 
 
 /*
